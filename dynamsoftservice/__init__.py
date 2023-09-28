@@ -101,7 +101,7 @@ class ScannerController:
         except Exception as error:
             pass
 
-    def get_image_file(self, host, job_id, directory):
+    def getImageFile(self, host, job_id, directory):
         """
         Get an image file.
 
@@ -142,7 +142,7 @@ class ScannerController:
         """
         images = []
         while True:
-            filename = self.get_image_file(host, jobId, directory)
+            filename = self.getImageFile(host, jobId, directory)
             if filename == '':
                 break
             else:

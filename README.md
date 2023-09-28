@@ -108,6 +108,15 @@ if __name__ == "__main__":
 
     ![python-flet-twain-document-scanner](https://github.com/yushulx/twain-wia-sane-scanner/assets/2202306/219d2adc-b03c-4da7-8393-10f49cdbc54d)
 
+## DynamsoftService API
+The `DynamsoftService` class provides methods to interact with the Dynamsoft service.
+
+- `getDevices(self, host: str, scannerType: int = None) -> List[Any]`: Get a list of available devices.
+- `scanDocument(self, host: str, parameters: Dict[str, Any]) -> str`: Scan a document.
+- `deleteJob(self, host: str, jobId: str) -> None`: Delete a job.
+- `getImageFile(self, host, job_id, directory)`: Get an image file.
+- `getImageFiles(self, host: str, jobId: str, directory: str) -> List[str]`: Get a list of image files.
+- `getImageStreams(self, host: str, jobId: str) -> List[bytes]`: Get a list of image streams.
 
 ## How to Build the Package
 - Source distribution:

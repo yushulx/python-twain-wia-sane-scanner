@@ -103,6 +103,12 @@ if __name__ == "__main__":
     ask_question()
 ```
 
+## Example
+- [Flet App](https://github.com/yushulx/twain-wia-sane-scanner/tree/main/example)
+
+    ![python-flet-twain-document-scanner](https://github.com/yushulx/twain-wia-sane-scanner/assets/2202306/219d2adc-b03c-4da7-8393-10f49cdbc54d)
+
+
 ## How to Build the Package
 - Source distribution:
     

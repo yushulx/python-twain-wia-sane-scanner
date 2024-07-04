@@ -6,7 +6,7 @@ import base64
 license_key = "LICENSE-KEY"
 scannerController = ScannerController()
 devices = []
-host = "http://192.168.8.72:18622"
+host = "http://127.0.0.1:18622"
 
 
 def main(page: ft.Page):

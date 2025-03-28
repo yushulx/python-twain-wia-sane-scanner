@@ -1,6 +1,6 @@
 # Python TWAIN Document Scanner
 
-An example app demonstrating how to utilize [Dynamsoft Service](https://www.dynamsoft.com/blog/announcement/dynamsoft-service-restful-api/) to scan documents from TWAIN compatible scanners.
+An example app demonstrating how to utilize [Dynamic Web TWAIN Service](https://www.dynamsoft.com/blog/announcement/dynamsoft-service-restful-api/) to scan documents from TWAIN compatible scanners.
 
 ## Installation
 

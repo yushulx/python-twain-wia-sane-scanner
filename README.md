@@ -1,8 +1,8 @@
 # Python Document Scanner for TWAIN, WIA, SANE, ICA, and eSCL
-The package provides methods for calling [Dynamsoft Service REST APIs](https://www.dynamsoft.com/blog/announcement/dynamsoft-service-restful-api/). This allows developers to build Python applications for digitizing documents from **TWAIN (32-bit/64-bit)**, **WIA**, **SANE**, **ICA** and **eSCL** scanners.
+The package provides methods for calling [Dynamic Web TWAIN Service REST APIs](https://www.dynamsoft.com/blog/announcement/dynamsoft-service-restful-api/). This allows developers to build Python applications for digitizing documents from **TWAIN (32-bit/64-bit)**, **WIA**, **SANE**, **ICA** and **eSCL** scanners.
 
 ## Prerequisites
-1. Install Dynamsoft Service.
+1. Install Dynamic Web TWAIN Service.
     - Windows: [Dynamsoft-Service-Setup.msi](https://demo.dynamsoft.com/DWT/DWTResources/dist/DynamsoftServiceSetup.msi)
     - macOS: [Dynamsoft-Service-Setup.pkg](https://demo.dynamsoft.com/DWT/DWTResources/dist/DynamsoftServiceSetup.pkg)
     - Linux: 
@@ -13,7 +13,7 @@ The package provides methods for calling [Dynamsoft Service REST APIs](https://w
         
 2. Request a [free trial license](https://www.dynamsoft.com/customer/license/trialLicense/?product=dcv&package=cross-platform).
 
-## Dynamsoft Service REST API
+## Dynamic Web TWAIN Service REST API
 By default, the REST API's host address is set to `http://127.0.0.1:18622`. 
 
 | Method | Endpoint        | Description                   | Parameters                         | Response                      |
@@ -109,7 +109,7 @@ if __name__ == "__main__":
     ![python-flet-twain-document-scanner](https://github.com/yushulx/twain-wia-sane-scanner/assets/2202306/219d2adc-b03c-4da7-8393-10f49cdbc54d)
 
 ## DynamsoftService API
-The `DynamsoftService` class provides methods to interact with the Dynamsoft service.
+The `DynamsoftService` class provides methods to interact with the Dynamic Web TWAIN Service.
 
 - `getDevices(self, host: str, scannerType: int = None) -> List[Any]`: Get a list of available devices.
 - `scanDocument(self, host: str, parameters: Dict[str, Any]) -> str`: Scan a document.

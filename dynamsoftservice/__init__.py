@@ -33,7 +33,7 @@ class ScannerType:
 
 class ScannerController:
     """
-    A class that provides methods to interact with Dynamsoft Service API.
+    A class that provides methods to interact with Dynamic Web TWAIN Service API.
     """
 
     def getDevices(self, host: str, scannerType: int = None) -> List[Any]:
@@ -41,7 +41,7 @@ class ScannerController:
         Get a list of available devices.
 
         Args:
-            host (str): The URL of the Dynamsoft Service API.
+            host (str): The URL of the Dynamic Web TWAIN Service API.
             scannerType (int, optional): The type of scanner. Defaults to None.
 
         Returns:
@@ -66,7 +66,7 @@ class ScannerController:
         Scan a document.
 
         Args:
-            host (str): The URL of the Dynamsoft Service API.
+            host (str): The URL of the Dynamic Web TWAIN Service API.
             parameters (Dict[str, Any]): The parameters for the scan.
 
         Returns:
@@ -88,7 +88,7 @@ class ScannerController:
         Delete a job.
 
         Args:
-            host (str): The URL of the Dynamsoft Service API.
+            host (str): The URL of the Dynamic Web TWAIN Service API.
             jobId (str): The ID of the job.
         """
         if not jobId:
@@ -106,7 +106,7 @@ class ScannerController:
         Get an image file.
 
         Args:
-            host (str): The URL of the Dynamsoft Service API.
+            host (str): The URL of the Dynamic Web TWAIN Service API.
             jobId (str): The ID of the job.
             directory (str): The directory to save the image file.
 
@@ -133,7 +133,7 @@ class ScannerController:
         Get a list of image files.
 
         Args:
-            host (str): The URL of the Dynamsoft Service API.
+            host (str): The URL of the Dynamic Web TWAIN Service API.
             jobId (str): The ID of the job.
             directory (str): The directory to save the image files.
 
@@ -154,7 +154,7 @@ class ScannerController:
         Get a list of image streams.
 
         Args:
-            host (str): The URL of the Dynamsoft Service API.
+            host (str): The URL of the Dynamic Web TWAIN Service API.
             jobId (str): The ID of the job.
 
         Returns:

@@ -1,9 +1,11 @@
 
-from dynamsoftservice import ScannerController, ScannerType
+import sys
 import flet as ft
 import base64
+sys.path.append("../")
+from dynamsoftservice import ScannerController, ScannerType
 
-license_key = "LICENSE-KEY"
+license_key = "DLS2eyJoYW5kc2hha2VDb2RlIjoiMjAwMDAxLTE2NDk4Mjk3OTI2MzUiLCJvcmdhbml6YXRpb25JRCI6IjIwMDAwMSIsInNlc3Npb25QYXNzd29yZCI6IndTcGR6Vm05WDJrcEQ5YUoifQ=="
 scannerController = ScannerController()
 devices = []
 host = "http://127.0.0.1:18622"
@@ -52,8 +54,8 @@ def main(page: ft.Page):
             "IfDuplexEnabled": False,
         }
 
-        job_id = scannerController.scanDocument(host, parameters)
-
+        job = scannerController.createJob(host, parameters)
+        job_id = job["jobuid"]
         if job_id != "":
             images = scannerController.getImageStreams(host, job_id)
             for i, image in enumerate(images):

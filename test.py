@@ -52,8 +52,8 @@ def ask_question():
                 "IfDuplexEnabled": False,
             }
 
-            job_id = scannerController.scanDocument(host, parameters)
-
+            job = scannerController.createJob(host, parameters)
+            job_id = job["jobuid"]
             if job_id != "":
                 images = scannerController.getImageFiles(host, job_id, "./")
                 for i, image in enumerate(images):

@@ -15,6 +15,9 @@ class ScannerType:
     WIFIDIRECTSCANNER = 0x400
     WIATWAINSCANNER = 0x800
 
+class JobStatus:
+    RUNNING = 'running'
+    CANCELED = 'canceled'
 
 class ScannerController:
     """
@@ -225,6 +228,7 @@ class ScannerController:
     def deletePage(self, host: str, docId: str, pageId: str) -> bool:
         """Delete a page from a document."""
         url = f"{host}/api/storage/documents/{docId}/pages/{pageId}"
+
         try:
             response = requests.delete(url)
             return response.status_code == 204

@@ -3,7 +3,7 @@ from dynamsoftservice import ScannerController, ScannerType
 import flet as ft
 import base64
 
-license_key = "LICENSE-KEY"
+license_key = "DLS2eyJoYW5kc2hha2VDb2RlIjoiMjAwMDAxLTE2NDk4Mjk3OTI2MzUiLCJvcmdhbml6YXRpb25JRCI6IjIwMDAwMSIsInNlc3Npb25QYXNzd29yZCI6IndTcGR6Vm05WDJrcEQ5YUoifQ=="
 scannerController = ScannerController()
 devices = []
 host = "http://192.168.8.72:18622"

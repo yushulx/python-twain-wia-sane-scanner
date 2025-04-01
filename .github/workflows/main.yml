@@ -50,8 +50,15 @@ jobs:
         with:
           path: dist
 
+      - name: Move artifacts into dist/
+        run: |
+          mkdir upload
+          find dist -name '*.whl' -exec cp {} upload/ \;
+          find dist -name '*.tar.gz' -exec cp {} upload/ \;
+
       - uses: pypa/gh-action-pypi-publish@v1.4.2
         with:
           user: __token__
           password: ${{ secrets.pypi_password }}
           skip_existing: true
+          packages_dir: upload

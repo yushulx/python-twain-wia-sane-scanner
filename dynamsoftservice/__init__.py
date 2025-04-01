@@ -2,25 +2,10 @@ import time
 import os
 import json
 import requests
-from typing import List, Any, Dict
-
-__version__ = '1.0.0'
+from typing import List, Any, Dict, Optional
 
 
 class ScannerType:
-    """
-    A class that defines constants for different types of scanners.
-
-    Attributes:
-        TWAINSCANNER (int): TWAIN scanner type.
-        WIASCANNER (int): WIA scanner type.
-        TWAINX64SCANNER (int): TWAIN 64-bit scanner type.
-        ICASCANNER (int): ICA scanner type.
-        SANESCANNER (int): SANE scanner type.
-        ESCLSCANNER (int): ESCL scanner type.
-        WIFIDIRECTSCANNER (int): WiFi Direct scanner type.
-        WIATWAINSCANNER (int): WIA TWAIN scanner type.
-    """
     TWAINSCANNER = 0x10
     WIASCANNER = 0x20
     TWAINX64SCANNER = 0x40
@@ -30,138 +15,111 @@ class ScannerType:
     WIFIDIRECTSCANNER = 0x400
     WIATWAINSCANNER = 0x800
 
+class JobStatus:
+    RUNNING = 'running'
+    CANCELED = 'canceled'
 
 class ScannerController:
     """
-    A class that provides methods to interact with Dynamic Web TWAIN Service API.
+    A class that provides methods to interact with the Dynamic Web TWAIN Service API.
     """
 
-    def getDevices(self, host: str, scannerType: int = None) -> List[Any]:
-        """
-        Get a list of available devices.
+    def getServerInfo(self, host: str) -> Dict[str, Any]:
+        """Get version info of the TWAIN server."""
+        url = f"{host}/api/server/version"
+        try:
+            response = requests.get(url)
+            return response.json()
+        except Exception as e:
+            return {"version": str(e), "compatible": False}
 
-        Args:
-            host (str): The URL of the Dynamic Web TWAIN Service API.
-            scannerType (int, optional): The type of scanner. Defaults to None.
-
-        Returns:
-            List[Any]: A list of available devices.
-        """
-        devices = []
-        url = f"{host}/DWTAPI/Scanners"
+    def getDevices(self, host: str, scannerType: Optional[int] = None) -> List[Any]:
+        """Get a list of available scanners."""
+        url = f"{host}/api/device/scanners"
         if scannerType is not None:
             url += f"?type={scannerType}"
 
         try:
             response = requests.get(url)
-            if response.status_code == 200 and response.text:
-                devices = json.loads(response.text)
-                return devices
-        except Exception as error:
-            pass
-        return []
+            return response.json()
+        except Exception:
+            return []
 
-    def scanDocument(self, host: str, parameters: Dict[str, Any]) -> str:
-        """
-        Scan a document.
-
-        Args:
-            host (str): The URL of the Dynamic Web TWAIN Service API.
-            parameters (Dict[str, Any]): The parameters for the scan.
-
-        Returns:
-            str: The ID of the job.
-        """
-        url = f"{host}/DWTAPI/ScanJobs"
+    def createJob(self, host: str, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Create a new scan job."""
+        url = f"{host}/api/device/scanners/jobs"
         try:
-            response = requests.post(url, json=parameters, headers={
-                                     'Content-Type': 'application/text'})
-            jobId = response.text
-            if response.status_code == 201:
-                return jobId
+            headers = {
+                'Content-Type': 'application/json',
+                'Content-Length': str(len(json.dumps(parameters)))
+            }
+            response = requests.post(url, headers=headers, json=parameters)
+            return response.json()
         except Exception as error:
-            pass
-        return ""
+            return {"error": str(error)}
 
     def deleteJob(self, host: str, jobId: str) -> None:
-        """
-        Delete a job.
-
-        Args:
-            host (str): The URL of the Dynamic Web TWAIN Service API.
-            jobId (str): The ID of the job.
-        """
+        """Delete a scan job."""
         if not jobId:
             return
-        url = f"{host}/DWTAPI/ScanJobs/{jobId}"
+        url = f"{host}/api/device/scanners/jobs/{jobId}"
         try:
-            response = requests.delete(url)
-            if response.status_code == 200:
-                pass
-        except Exception as error:
+            requests.delete(url)
+        except Exception:
             pass
 
-    def getImageFile(self, host, job_id, directory):
-        """
-        Get an image file.
+    def updateJob(self, host: str, jobId: str, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Update scan job status (e.g., 'running', 'canceled')."""
+        url = f"{host}/api/device/scanners/jobs/{jobId}"
+        try:
+            headers = {
+                'Content-Type': 'application/json',
+                'Content-Length': str(len(json.dumps(parameters)))
+            }
+            response = requests.patch(url, headers=headers, json=parameters)
+            return response.json()
+        except Exception as error:
+            return {"error": str(error)}
 
-        Args:
-            host (str): The URL of the Dynamic Web TWAIN Service API.
-            jobId (str): The ID of the job.
-            directory (str): The directory to save the image file.
+    def checkJob(self, host: str, jobId: str) -> Dict[str, Any]:
+        """Check the status of an existing scan job."""
+        url = f"{host}/api/device/scanners/jobs/{jobId}"
+        try:
+            response = requests.get(url)
+            return response.json()
+        except Exception as error:
+            return {"error": str(error)}
 
-        Returns:
-            str: The image file path.
-        """
-        url = f"{host}/DWTAPI/ScanJobs/{job_id}/NextDocument"
+    def getImageFile(self, host: str, job_id: str, directory: str) -> str:
+        """Download a single scanned image and save it to disk."""
+        url = f"{host}/api/device/scanners/jobs/{job_id}/next-page"
         try:
             response = requests.get(url, stream=True)
             if response.status_code == 200:
-                timestamp = str(int(time.time() * 1000))
-                filename = f"image_{timestamp}.jpg"
-                image_path = os.path.join(directory, filename)
-                with open(image_path, 'wb') as f:
-                    f.write(response.content)
+                filename = f"image_{int(time.time() * 1000)}.jpg"
+                path_to_file = os.path.join(directory, filename)
+                with open(path_to_file, 'wb') as f:
+                    for chunk in response.iter_content(1024):
+                        f.write(chunk)
                 return filename
-        except Exception as e:
-            print("No more images.")
-            return ''
+        except Exception:
+            pass
         return ''
 
     def getImageFiles(self, host: str, jobId: str, directory: str) -> List[str]:
-        """
-        Get a list of image files.
-
-        Args:
-            host (str): The URL of the Dynamic Web TWAIN Service API.
-            jobId (str): The ID of the job.
-            directory (str): The directory to save the image files.
-
-        Returns:
-            List[str]: A list of image file paths.
-        """
+        """Download all scanned images of a job as files."""
         images = []
         while True:
             filename = self.getImageFile(host, jobId, directory)
-            if filename == '':
+            if not filename:
                 break
-            else:
-                images.append(filename)
+            images.append(filename)
         return images
 
     def getImageStreams(self, host: str, jobId: str) -> List[bytes]:
-        """
-        Get a list of image streams.
-
-        Args:
-            host (str): The URL of the Dynamic Web TWAIN Service API.
-            jobId (str): The ID of the job.
-
-        Returns:
-            List[bytes]: A list of image streams.
-        """
+        """Get all scanned images as byte streams."""
         streams = []
-        url = f"{host}/DWTAPI/ScanJobs/{jobId}/NextDocument"
+        url = f"{host}/api/device/scanners/jobs/{jobId}/next-page"
         while True:
             try:
                 response = requests.get(url)
@@ -169,6 +127,110 @@ class ScannerController:
                     streams.append(response.content)
                 elif response.status_code == 410:
                     break
-            except Exception as error:
+            except Exception:
                 break
         return streams
+
+    def getImageInfo(self, host: str, jobId: str) -> Dict[str, Any]:
+        """Get information of the next scanned page."""
+        url = f"{host}/api/device/scanners/jobs/{jobId}/next-page-info"
+        try:
+            response = requests.get(url)
+            return response.json()
+        except Exception as error:
+            return {"error": str(error)}
+
+    def getScannerCapabilities(self, host: str, jobId: str) -> Dict[str, Any]:
+        """Get scanner capabilities (e.g., DPI, color mode)."""
+        url = f"{host}/api/device/scanners/jobs/{jobId}/scanner/capabilities"
+        try:
+            response = requests.get(url)
+            return response.json()
+        except Exception as error:
+            return {"error": str(error)}
+
+    ##################
+    # Document-related
+    ##################
+
+    def createDocument(self, host: str, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Create a new document."""
+        url = f"{host}/api/storage/documents"
+        try:
+            headers = {
+                'Content-Type': 'application/json',
+                'Content-Length': str(len(json.dumps(parameters)))
+            }
+            response = requests.post(url, headers=headers, json=parameters)
+            return response.json()
+        except Exception as error:
+            return {"error": str(error)}
+
+    def getDocumentInfo(self, host: str, docId: str) -> Dict[str, Any]:
+        """Get document metadata."""
+        url = f"{host}/api/storage/documents/{docId}"
+        try:
+            response = requests.get(url)
+            return response.json()
+        except Exception as error:
+            return {"error": str(error)}
+
+    def deleteDocument(self, host: str, docId: str) -> bool:
+        """Delete an existing document."""
+        url = f"{host}/api/storage/documents/{docId}"
+        try:
+            response = requests.delete(url)
+            return response.status_code == 204
+        except Exception:
+            return False
+
+    def getDocumentFile(self, host: str, docId: str, directory: str) -> str:
+        """Download a document (PDF) and save it to disk."""
+        url = f"{host}/api/storage/documents/{docId}/content"
+        try:
+            response = requests.get(url, stream=True)
+            if response.status_code == 200:
+                filename = f"document_{int(time.time() * 1000)}.pdf"
+                path_to_file = os.path.join(directory, filename)
+                with open(path_to_file, 'wb') as f:
+                    for chunk in response.iter_content(1024):
+                        f.write(chunk)
+                return filename
+        except Exception:
+            pass
+        return ''
+
+    def getDocumentStream(self, host: str, docId: str) -> Optional[bytes]:
+        """Get document content as byte stream."""
+        url = f"{host}/api/storage/documents/{docId}/content"
+        try:
+            response = requests.get(url)
+            if response.status_code == 200:
+                return response.content
+        except Exception:
+            pass
+        return None
+
+    def insertPage(self, host: str, docId: str, parameters: Dict[str, Any]) -> Dict[str, Any]:
+        """Insert a new page into an existing document."""
+        url = f"{host}/api/storage/documents/{docId}/pages"
+        try:
+            headers = {
+                'Content-Type': 'application/json',
+                'X-DICS-DOC-PASSWORD': parameters.get("password", ""),
+                'Content-Length': str(len(json.dumps(parameters)))
+            }
+            response = requests.post(url, headers=headers, json=parameters)
+            return response.json()
+        except Exception as error:
+            return {"error": str(error)}
+
+    def deletePage(self, host: str, docId: str, pageId: str) -> bool:
+        """Delete a page from a document."""
+        url = f"{host}/api/storage/documents/{docId}/pages/{pageId}"
+
+        try:
+            response = requests.delete(url)
+            return response.status_code == 204
+        except Exception:
+            return False

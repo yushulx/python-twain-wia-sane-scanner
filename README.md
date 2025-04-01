@@ -1,44 +1,51 @@
-# Python Document Scanner for TWAIN, WIA, SANE, ICA, and eSCL
-The package provides methods for calling [Dynamic Web TWAIN Service REST APIs](https://www.dynamsoft.com/blog/announcement/dynamsoft-service-restful-api/). This allows developers to build Python applications for digitizing documents from **TWAIN (32-bit/64-bit)**, **WIA**, **SANE**, **ICA** and **eSCL** scanners.
+# 🐍 Python Document Scanner for TWAIN, WIA, SANE, ICA, and eSCL
+This package provides Python bindings to access the **Dynamic Web TWAIN Service REST API**, enabling document scanning across platforms using:
 
-## Prerequisites
-1. Install Dynamic Web TWAIN Service.
-    - Windows: [Dynamsoft-Service-Setup.msi](https://demo.dynamsoft.com/DWT/DWTResources/dist/DynamsoftServiceSetup.msi)
-    - macOS: [Dynamsoft-Service-Setup.pkg](https://demo.dynamsoft.com/DWT/DWTResources/dist/DynamsoftServiceSetup.pkg)
-    - Linux: 
-        - [Dynamsoft-Service-Setup.deb](https://demo.dynamsoft.com/DWT/DWTResources/dist/DynamsoftServiceSetup.deb)
-        - [Dynamsoft-Service-Setup-arm64.deb](https://demo.dynamsoft.com/DWT/DWTResources/dist/DynamsoftServiceSetup-arm64.deb)
-        - [Dynamsoft-Service-Setup-mips64el.deb](https://demo.dynamsoft.com/DWT/DWTResources/dist/DynamsoftServiceSetup-mips64el.deb)
-        - [Dynamsoft-Service-Setup.rpm](https://demo.dynamsoft.com/DWT/DWTResources/dist/DynamsoftServiceSetup.rpm)
-        
-2. Request a [free trial license](https://www.dynamsoft.com/customer/license/trialLicense/?product=dcv&package=cross-platform).
+- **TWAIN (32-bit / 64-bit)**
+- **WIA (Windows Image Acquisition)**
+- **SANE (Linux)**
+- **ICA (macOS)**
+- **eSCL (AirScan / Mopria)**
 
-## Dynamic Web TWAIN Service REST API
-By default, the REST API's host address is set to `http://127.0.0.1:18622`. 
+## ⚙️ Prerequisites
 
-| Method | Endpoint        | Description                   | Parameters                         | Response                      |
-|--------|-----------------|-------------------------------|------------------------------------|-------------------------------|
-| GET    | `/DWTAPI/Scanners`    | Get a list of scanners  | None                               | `200 OK` with scanner list       |
-| POST   | `/DWTAPI/ScanJobs`    | Creates a scan job      | `license`, `device`, `config`      | `201 Created` with job ID    |
-| GET    | `/DWTAPI/ScanJobs/:id/NextDocument`| Retrieves a document image     | `id`: Job ID   | `200 OK` with image stream    |
-| DELETE | `/DWTAPI/ScanJobs/:id`| Deletes a scan job       | `id`: Job ID                      | `200 OK`              |
+### ✅ Install Dynamic Web TWAIN Service
 
-You can navigate to `http://127.0.0.1:18625/` to access the service. To make it accessible from desktop, mobile, and web applications on the same network, you can change the host address to a LAN IP address. For example, you might use `http://192.168.8.72`.
+- **Windows**: [Dynamsoft-Service-Setup.msi](https://demo.dynamsoft.com/DWT/DWTResources/dist/DynamsoftServiceSetup.msi)  
+- **macOS**: [Dynamsoft-Service-Setup.pkg](https://demo.dynamsoft.com/DWT/DWTResources/dist/DynamsoftServiceSetup.pkg)  
+- **Linux**:  
+  - [Dynamsoft-Service-Setup.deb](https://demo.dynamsoft.com/DWT/DWTResources/dist/DynamsoftServiceSetup.deb)  
+  - [Dynamsoft-Service-Setup-arm64.deb](https://demo.dynamsoft.com/DWT/DWTResources/dist/DynamsoftServiceSetup-arm64.deb)  
+  - [Dynamsoft-Service-Setup-mips64el.deb](https://demo.dynamsoft.com/DWT/DWTResources/dist/DynamsoftServiceSetup-mips64el.deb)  
+  - [Dynamsoft-Service-Setup.rpm](https://demo.dynamsoft.com/DWT/DWTResources/dist/DynamsoftServiceSetup.rpm)
+
+### 🔑 Get a License
+
+Request a [free trial license](https://www.dynamsoft.com/customer/license/trialLicense/?product=dcv&package=cross-platform).
+
+## 🧩 Configuration
+
+After installation, open `http://127.0.0.1:18625/` in your browser to configure the **host** and **port** settings.
+
+> By default, the service is bound to `127.0.0.1`. To access it across the LAN, change the host to your local IP (e.g., `192.168.8.72`).
 
 ![dynamsoft-service-config](https://github.com/yushulx/dynamsoft-service-REST-API/assets/2202306/e2b1292e-dfbd-4821-bf41-70e2847dd51e)
 
-The scanner parameter configuration is based on [Dynamsoft Web TWAIN documentation](https://www.dynamsoft.com/web-twain/docs/info/api/Interfaces.html#DeviceConfiguration). 
 
-## Quick Start
-Replace the license key in the code below with a valid one and run the code.
+## 📡 REST API Endpoints
+
+[https://www.dynamsoft.com/web-twain/docs/info/api/restful.html](https://www.dynamsoft.com/web-twain/docs/info/api/restful.html)
+
+## 🚀 Quick Start
+Replace `LICENSE-KEY` with your actual license and run:
 
 ```python
 from dynamsoftservice import ScannerController, ScannerType
 
+license_key = "LICENSE-KEY"
 scannerController = ScannerController()
 devices = []
 host = "http://127.0.0.1:18622"
-license_key = "LICENSE-KEY"
 
 questions = """
 Please select an operation:
@@ -68,7 +75,7 @@ def ask_question():
                 continue
 
             index = input(f"\nSelect an index (<= {len(devices) - 1}): ")
-            index = int(index)  
+            index = int(index) 
 
             if index < 0 or index >= len(devices):
                 print("It is out of range.")
@@ -87,8 +94,8 @@ def ask_question():
                 "IfDuplexEnabled": False,
             }
 
-            job_id = scannerController.scanDocument(host, parameters)
-
+            job = scannerController.createJob(host, parameters)
+            job_id = job["jobuid"]
             if job_id != "":
                 images = scannerController.getImageFiles(host, job_id, "./")
                 for i, image in enumerate(images):
@@ -103,29 +110,50 @@ if __name__ == "__main__":
     ask_question()
 ```
 
-## Example
-- [Flet App](https://github.com/yushulx/twain-wia-sane-scanner/tree/main/example)
+## 🧪 Examples
+- 📦 [Flet App](https://github.com/yushulx/twain-wia-sane-scanner/tree/main/example)
 
     ![python-flet-twain-document-scanner](https://github.com/yushulx/twain-wia-sane-scanner/assets/2202306/219d2adc-b03c-4da7-8393-10f49cdbc54d)
 
-## DynamsoftService API
-The `DynamsoftService` class provides methods to interact with the Dynamic Web TWAIN Service.
+## 📚 Python API Reference
 
-- `getDevices(self, host: str, scannerType: int = None) -> List[Any]`: Get a list of available devices.
-- `scanDocument(self, host: str, parameters: Dict[str, Any]) -> str`: Scan a document.
-- `deleteJob(self, host: str, jobId: str) -> None`: Delete a job.
-- `getImageFile(self, host, job_id, directory)`: Get an image file.
-- `getImageFiles(self, host: str, jobId: str, directory: str) -> List[str]`: Get a list of image files.
-- `getImageStreams(self, host: str, jobId: str) -> List[bytes]`: Get a list of image streams.
+### Scanner Functions
 
-## How to Build the Package
+| Method | Description |
+|--------|-------------|
+| `getDevices(host, scannerType=None)` | Get available scanning devices |
+| `createJob(host, parameters)` | Create a scanning job |
+| `checkJob(host, jobId)` | Check job status |
+| `updateJob(host, jobId, parameters)` | Update job status |
+| `deleteJob(host, jobId)` | Delete a scanning job |
+| `getImageFile(host, jobId, directory)` | Get a single scanned image |
+| `getImageFiles(host, jobId, directory)` | Get multiple scanned images |
+| `getImageStreams(host, jobId)` | Get scanned images as byte streams |
+| `getImageInfo(host, jobId)` | Get metadata about next scanned page |
+| `getScannerCapabilities(host, jobId)` | Get scanner settings and capabilities |
+
+### Document Functions
+
+| Method | Description |
+|--------|-------------|
+| `createDocument(host, parameters)` | Create a new document |
+| `getDocumentInfo(host, docId)` | Retrieve document metadata |
+| `deleteDocument(host, docId)` | Delete an existing document |
+| `getDocumentFile(host, docId, directory)` | Download document as PDF file |
+| `getDocumentStream(host, docId)` | Get document as byte stream |
+| `insertPage(host, docId, parameters)` | Insert a page into a document |
+| `deletePage(host, docId, pageId)` | Delete a specific page from a document |
+
+
+## 📦 Build the Package
+To build and distribute the package locally:
 - Source distribution:
     
     ```bash
     python setup.py sdist
     ```
 
-- Wheel:
+- Wheel Distribution:
     
     ```bash
     pip wheel . --verbose

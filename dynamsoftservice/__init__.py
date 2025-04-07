@@ -125,7 +125,7 @@ class ScannerController:
                 response = requests.get(url)
                 if response.status_code == 200:
                     streams.append(response.content)
-                elif response.status_code == 410:
+                else:
                     break
             except Exception:
                 break

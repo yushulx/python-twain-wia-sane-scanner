@@ -51,6 +51,7 @@ class ScannerController:
         try:
             headers = {
                 'Content-Type': 'application/json',
+                'DWT-PRODUCT-KEY': parameters.get("license", ""),
                 'Content-Length': str(len(json.dumps(parameters)))
             }
             response = requests.post(url, headers=headers, json=parameters)
@@ -217,7 +218,7 @@ class ScannerController:
         try:
             headers = {
                 'Content-Type': 'application/json',
-                'X-DICS-DOC-PASSWORD': parameters.get("password", ""),
+                'DWT-DOC-PASSWORD': parameters.get("password", ""),
                 'Content-Length': str(len(json.dumps(parameters)))
             }
             response = requests.post(url, headers=headers, json=parameters)

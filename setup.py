@@ -34,7 +34,7 @@ class CustomInstall(install):
 
 
 setup(name='twain-wia-sane-scanner',
-      version='2.0.1',
+      version='2.0.2',
       description='A Python package for digitizing documents from TWAIN, WIA, SANE, ICA and eSCL compatible scanners.',
       long_description=long_description,
       long_description_content_type="text/markdown",

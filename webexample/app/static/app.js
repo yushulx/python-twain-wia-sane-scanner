@@ -148,7 +148,8 @@ function syncLayout() {
   heroActionRow.hidden = signedIn;
   authEntrySection.hidden = !showAuthPanel;
   workspaceSection.hidden = !signedIn;
-  userBadge.hidden = !signedIn;
+  // Hide userBadge for admins — "Signed in as admin" in sessionState is enough
+  userBadge.hidden = !signedIn || Boolean(state.currentUser?.is_admin);
   logoutButton.hidden = !signedIn;
 }
 
@@ -166,6 +167,19 @@ function setAuthMode(mode) {
   authCopy.textContent = isLogin
     ? "Use an existing account to open the private scanning workspace."
     : "Register a new account first, then switch back to sign in and unlock the scanner workspace.";
+
+  // Clear any stale form feedback when switching modes
+  const loginFeedback = document.getElementById("loginFeedback");
+  const registerFeedback = document.getElementById("registerFeedback");
+  if (loginFeedback) {
+    loginFeedback.hidden = true;
+    loginFeedback.textContent = "";
+  }
+  if (registerFeedback) {
+    registerFeedback.hidden = true;
+    registerFeedback.textContent = "";
+  }
+
   authSwitchButtons.forEach((button) => {
     button.classList.toggle("is-active", button.dataset.switchAuth === mode);
   });
@@ -228,6 +242,18 @@ function setSignedInState(user) {
   // Admin: hide scan output panel and center operations; operator: show full two-column layout
   resultPanel.hidden = user.is_admin;
   workspaceSection.classList.toggle("admin-view", user.is_admin);
+
+  const workspaceTitle = document.getElementById("workspaceTitle");
+  const workspaceCopy = document.getElementById("workspaceCopy");
+  if (workspaceTitle) {
+    workspaceTitle.textContent = user.is_admin ? "User Management" : "Scanner Operations";
+  }
+  if (workspaceCopy) {
+    workspaceCopy.textContent = user.is_admin
+      ? "Delete accounts or change a user's administrator permissions."
+      : "Controls and status change based on your account role.";
+  }
+
   setAuthMode("hidden");
   syncLayout();
 }
@@ -490,6 +516,27 @@ async function loadScanners() {
   renderScanners(payload.scanners || []);
 }
 
+async function signIn(username, password) {
+  const formPayload = new URLSearchParams();
+  formPayload.set("username", username);
+  formPayload.set("password", password);
+
+  const token = await api("/api/auth/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: formPayload,
+  });
+  state.token = token.access_token;
+  sessionStorage.setItem(tokenKey, state.token);
+  await loadCurrentUser();
+  await Promise.all([
+    loadScanners(),
+    loadUsers(),
+  ]);
+  startPolling();
+  setBanner("Authentication succeeded. Shared scanner status is live.", "success");
+}
+
 async function registerUser(event) {
   event.preventDefault();
   const payload = {
@@ -498,20 +545,23 @@ async function registerUser(event) {
     password: document.getElementById("registerPassword").value,
   };
 
+  const registerFeedback = document.getElementById("registerFeedback");
+
   try {
     setSubmitBusy(registerSubmitButton, true, "Registering...", "Register");
-    const createdUser = await api("/api/auth/register", { method: "POST", json: payload });
-    if (createdUser.is_admin) {
-      setBanner(`Registered ${payload.username}. This account is the administrator. Sign in to manage users.`, "success");
-    } else {
-      setBanner(`Registered ${payload.username}. Sign in to access the scanners.`, "success");
-    }
+    await api("/api/auth/register", { method: "POST", json: payload });
     registerForm.reset();
-    setAuthMode("login");
-    document.getElementById("loginUsername").value = payload.username;
+    setAuthMode("hidden");
+    // Auto sign-in after successful registration
+    await signIn(payload.username, payload.password);
     await loadPublicSetup();
   } catch (error) {
     setBanner(formatError(error), "error");
+    if (registerFeedback) {
+      registerFeedback.textContent = formatError(error);
+      registerFeedback.dataset.tone = "error";
+      registerFeedback.hidden = false;
+    }
   } finally {
     setSubmitBusy(registerSubmitButton, false, "Registering...", "Register");
   }
@@ -519,26 +569,12 @@ async function registerUser(event) {
 
 async function loginUser(event) {
   event.preventDefault();
-  const formPayload = new URLSearchParams();
-  formPayload.set("username", document.getElementById("loginUsername").value.trim());
-  formPayload.set("password", document.getElementById("loginPassword").value);
+  const username = document.getElementById("loginUsername").value.trim();
+  const password = document.getElementById("loginPassword").value;
 
   try {
     setSubmitBusy(loginSubmitButton, true, "Signing In...", "Get Access Token");
-    const token = await api("/api/auth/token", {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: formPayload,
-    });
-    state.token = token.access_token;
-    sessionStorage.setItem(tokenKey, state.token);
-    await loadCurrentUser();
-    await Promise.all([
-      loadScanners(),
-      loadUsers(),
-    ]);
-    startPolling();
-    setBanner("Authentication succeeded. Shared scanner status is live.", "success");
+    await signIn(username, password);
     loginForm.reset();
   } catch (error) {
     setBanner(formatError(error), "error");

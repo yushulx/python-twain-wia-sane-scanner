@@ -13,7 +13,7 @@
       <div class="hero-copy">
         <p class="eyebrow">Shared TWAIN access over your LAN</p>
         <h1>Secure Remote Scanning Gateway</h1>
-        <p class="lede">Keep registration and sign-in tucked away until someone asks for them, then reveal a scanner workspace only after authentication succeeds.</p>
+
       </div>
       <div class="hero-rail">
         <div class="hero-status" id="sessionState">
@@ -65,6 +65,7 @@
             <input id="loginPassword" name="password" type="password" autocomplete="current-password" minlength="8" maxlength="128" required>
           </label>
           <p class="form-hint">Use the administrator account shown above to open user management.</p>
+          <p id="loginFeedback" class="form-feedback" data-tone="info" hidden aria-live="polite"></p>
           <button type="submit">Get Access Token</button>
         </form>
 
@@ -82,6 +83,7 @@
             <input id="registerPassword" name="password" type="password" autocomplete="new-password" minlength="8" maxlength="128" required>
           </label>
           <p class="form-hint">Username must be at least 3 characters. Password must be at least 8 characters.</p>
+          <p id="registerFeedback" class="form-feedback" data-tone="info" hidden aria-live="polite"></p>
           <button type="submit">Register</button>
         </form>
       </article>
@@ -92,8 +94,8 @@
         <div class="panel-header">
           <div>
             <p class="eyebrow">Authenticated Workspace</p>
-            <h2>Scanner Operations</h2>
-            <p class="panel-copy">Controls and status change based on your account role.</p>
+            <h2 id="workspaceTitle">Scanner Operations</h2>
+            <p class="panel-copy" id="workspaceCopy">Controls and status change based on your account role.</p>
           </div>
           <div class="workspace-role-pill" id="workspaceRolePill">Signed out</div>
         </div>
@@ -164,10 +166,6 @@
 
         <section class="operations-section users-section" id="usersPanel" hidden>
           <div class="section-header">
-            <div>
-              <h3>User Management</h3>
-              <p class="panel-copy">Delete accounts or change a user&#39;s administrator permissions.</p>
-            </div>
             <button id="refreshUsersButton" class="ghost-button" type="button">Refresh Users</button>
           </div>
           <div class="user-list" id="userList">

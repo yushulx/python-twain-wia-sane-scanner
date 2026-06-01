@@ -1,15 +1,18 @@
-# 🐍 Python Document Scanner for TWAIN, WIA, SANE, ICA, and eSCL
-This package provides Python bindings to access the **Dynamic Web TWAIN Service REST API**, enabling document scanning across platforms using:
+# Python SDK for Dynamic Web TWAIN Service
 
-- **TWAIN (32-bit / 64-bit)**
-- **WIA (Windows Image Acquisition)**
-- **SANE (Linux)**
-- **ICA (macOS)**
-- **eSCL (AirScan / Mopria)**
+This repository provides a Python wrapper around the Dynamic Web TWAIN Service REST API for scanner discovery, job control, page capture, document storage, and document processing.
 
-## ⚙️ Prerequisites
+Supported scanner backends:
 
-### ✅ Install Dynamic Web TWAIN Service
+- TWAIN and TWAIN x64 on Windows
+- WIA on Windows
+- ICA on macOS
+- SANE on Linux
+- eSCL and other network-capable devices supported by the service
+
+## Install the service
+
+Dynamic Web TWAIN Service must be installed on the machine that can physically access the scanner.
 
 - **Windows**: [Dynamsoft-Service-Setup.msi](https://demo.dynamsoft.com/DWT/DWTResources/dist/DynamsoftServiceSetup.msi)  
 - **macOS**: [Dynamsoft-Service-Setup.pkg](https://demo.dynamsoft.com/DWT/DWTResources/dist/DynamsoftServiceSetup.pkg)  
@@ -19,146 +22,203 @@ This package provides Python bindings to access the **Dynamic Web TWAIN Service 
   - [Dynamsoft-Service-Setup-mips64el.deb](https://demo.dynamsoft.com/DWT/DWTResources/dist/DynamsoftServiceSetup-mips64el.deb)  
   - [Dynamsoft-Service-Setup.rpm](https://demo.dynamsoft.com/DWT/DWTResources/dist/DynamsoftServiceSetup.rpm)
 
-### 🔑 Get a License
+Get a trial license here:
 
-Request a [free trial license](https://www.dynamsoft.com/customer/license/trialLicense/?product=dcv&package=cross-platform).
+[https://www.dynamsoft.com/customer/license/trialLicense/?product=dcv&package=cross-platform](https://www.dynamsoft.com/customer/license/trialLicense/?product=dcv&package=cross-platform)
 
-## 🧩 Configuration
+## Install the Python package
 
-After installation, open `http://127.0.0.1:18625/` in your browser to configure the **host** and **port** settings.
+```bash
+pip install twain-wia-sane-scanner
+```
 
-> By default, the service is bound to `127.0.0.1`. To access it across the LAN, change the host to your local IP (e.g., `192.168.8.72`).
+Or install from source:
+
+```bash
+pip install -e .
+```
+
+## Configure the REST host
+
+Open `http://127.0.0.1:18625/` after installing the service to configure the listen address and port.
+
+By default the REST API is available on `http://127.0.0.1:18622/api` and `https://127.0.0.1:18623/api`.
+
+If you want other machines on the local network to reach the service, bind it to the gateway machine IP instead of `127.0.0.1`.
 
 ![dynamsoft-service-config](https://github.com/yushulx/dynamsoft-service-REST-API/assets/2202306/e2b1292e-dfbd-4821-bf41-70e2847dd51e)
 
-
-## 📡 REST API Endpoints
+Official REST reference:
 
 [https://www.dynamsoft.com/web-twain/docs/info/api/restful.html](https://www.dynamsoft.com/web-twain/docs/info/api/restful.html)
 
-## 🚀 Quick Start
-Replace `LICENSE-KEY` with your actual license and run:
+## Quick start
+
+### Discover scanners and stream pages in memory
+
+```python
+from dynamsoftservice import JobStatus, ScannerController, ScannerServiceError, ScannerType
+
+LICENSE_KEY = "LICENSE-KEY"
+HOST = "http://127.0.0.1:18622"
+
+controller = ScannerController(timeout=120, raise_errors=True)
+
+try:
+    scanners = controller.getDevices(
+        HOST,
+        ScannerType.TWAINSCANNER | ScannerType.TWAINX64SCANNER,
+    )
+    if not scanners:
+        raise RuntimeError("No scanners were returned by the Dynamic Web TWAIN Service.")
+
+    job = controller.createJob(
+        HOST,
+        {
+            "license": LICENSE_KEY,
+            "device": scanners[0]["device"],
+            "autoRun": False,
+            "jobTimeout": 180,
+            "scannerFailureTimeout": 90,
+            "config": {
+                "IfShowUI": False,
+                "PixelType": 2,
+                "Resolution": 200,
+                "IfFeederEnabled": True,
+                "IfDuplexEnabled": False,
+            },
+        },
+    )
+
+    job_id = job["jobuid"]
+    controller.updateJob(HOST, job_id, {"status": JobStatus.RUNNING})
+
+    page_index = 1
+    while True:
+        page_bytes = controller.getImageStream(HOST, job_id, imageType="image/png")
+        if page_bytes is None:
+            break
+        print(f"Captured page {page_index}: {len(page_bytes)} bytes")
+        page_index += 1
+except ScannerServiceError as error:
+    print(error.details)
+    raise
+finally:
+    if 'job_id' in locals():
+        controller.deleteJob(HOST, job_id)
+    controller.close()
+```
+
+### Save all pages to disk
 
 ```python
 from dynamsoftservice import ScannerController, ScannerType
 
-license_key = "LICENSE-KEY"
-scannerController = ScannerController()
-devices = []
+controller = ScannerController()
 host = "http://127.0.0.1:18622"
+scanners = controller.getDevices(host, ScannerType.TWAINSCANNER | ScannerType.TWAINX64SCANNER)
 
-questions = """
-Please select an operation:
-1. Get scanners
-2. Acquire documents by scanner index
-3. Quit
-"""
+job = controller.createJob(
+    host,
+    {
+        "license": "LICENSE-KEY",
+        "device": scanners[0]["device"],
+        "config": {
+            "IfShowUI": False,
+            "PixelType": 2,
+            "Resolution": 200,
+            "IfFeederEnabled": True,
+            "IfDuplexEnabled": False,
+        },
+    },
+)
 
-
-def ask_question():
-    while True:
-        print(".............................................")
-        answer = input(questions)
-
-        if answer == '3':
-            break
-        elif answer == '1':
-            scanners = scannerController.getDevices(
-                host, ScannerType.TWAINSCANNER | ScannerType.TWAINX64SCANNER)
-            devices.clear()
-            for i, scanner in enumerate(scanners):
-                devices.append(scanner)
-                print(f"\nIndex: {i}, Name: {scanner['name']}")
-        elif answer == '2':
-            if len(devices) == 0:
-                print("Please get scanners first!\n")
-                continue
-
-            index = input(f"\nSelect an index (<= {len(devices) - 1}): ")
-            index = int(index) 
-
-            if index < 0 or index >= len(devices):
-                print("It is out of range.")
-                continue
-
-            parameters = {
-                "license": license_key,
-                "device": devices[index]["device"],
-            }
-
-            parameters["config"] = {
-                "IfShowUI": False,
-                "PixelType": 2,
-                "Resolution": 200,
-                "IfFeederEnabled": False,
-                "IfDuplexEnabled": False,
-            }
-
-            job = scannerController.createJob(host, parameters)
-            job_id = job["jobuid"]
-            if job_id != "":
-                images = scannerController.getImageFiles(host, job_id, "./")
-                for i, image in enumerate(images):
-                    print(f"Image {i}: {image}")
-
-                scannerController.deleteJob(host, job_id)
-        else:
-            continue
-
-
-if __name__ == "__main__":
-    ask_question()
+files = controller.getImageFiles(host, job["jobuid"], "./output", imageType="image/jpeg")
+print(files)
+controller.deleteJob(host, job["jobuid"])
 ```
 
-## 🧪 Examples
-- 📦 [Flet App](https://github.com/yushulx/twain-wia-sane-scanner/tree/main/example)
+## API reference
 
-    ![python-flet-twain-document-scanner](https://github.com/yushulx/twain-wia-sane-scanner/assets/2202306/219d2adc-b03c-4da7-8393-10f49cdbc54d)
-
-## 📚 Python API Reference
-
-### Scanner Functions
+### Controller lifecycle
 
 | Method | Description |
-|--------|-------------|
-| `getDevices(host, scannerType=None)` | Get available scanning devices |
-| `createJob(host, parameters)` | Create a scanning job |
-| `checkJob(host, jobId)` | Check job status |
-| `updateJob(host, jobId, parameters)` | Update job status |
-| `deleteJob(host, jobId)` | Delete a scanning job |
-| `getImageFile(host, jobId, directory)` | Get a single scanned image |
-| `getImageFiles(host, jobId, directory)` | Get multiple scanned images |
-| `getImageStreams(host, jobId)` | Get scanned images as byte streams |
-| `getImageInfo(host, jobId)` | Get metadata about next scanned page |
-| `getScannerCapabilities(host, jobId)` | Get scanner settings and capabilities |
+| --- | --- |
+| `ScannerController(timeout=30, verify=True, session=None, raise_errors=False)` | Create a controller with reusable HTTP settings. |
+| `close()` | Close the underlying `requests.Session`. |
+| `last_error` | Holds the last normalized error payload when `raise_errors=False`. |
 
-### Document Functions
+### Server APIs
 
 | Method | Description |
-|--------|-------------|
-| `createDocument(host, parameters)` | Create a new document |
-| `getDocumentInfo(host, docId)` | Retrieve document metadata |
-| `deleteDocument(host, docId)` | Delete an existing document |
-| `getDocumentFile(host, docId, directory)` | Download document as PDF file |
-| `getDocumentStream(host, docId)` | Get document as byte stream |
-| `insertPage(host, docId, parameters)` | Insert a page into a document |
-| `deletePage(host, docId, pageId)` | Delete a specific page from a document |
+| --- | --- |
+| `getServerInfo(host)` | Get API version compatibility information. |
+| `getServerSettings(host)` | Get Dynamic Web TWAIN Service runtime settings. |
+| `updateServerSettings(host, parameters)` | Update service settings such as `logLevel`. |
 
+### Scanner APIs
 
-## 📦 Build the Package
-To build and distribute the package locally:
-- Source distribution:
-    
-    ```bash
-    python setup.py sdist
-    ```
+| Method | Description |
+| --- | --- |
+| `getDevices(host, scannerType=None)` | List scanners exposed by the service. |
+| `createJob(host, parameters)` | Create a scan job. `license` is sent as the `DWT-PRODUCT-KEY` header. |
+| `checkJob(host, jobId)` | Check job state and result metadata. |
+| `updateJob(host, jobId, parameters)` | Move a pending job to `running` or cancel a running job. |
+| `deleteJob(host, jobId)` | Delete a job and release the scanner lock. Returns `True` on success. |
+| `getImageStream(host, jobId, imageType='image/png')` | Download the next scanned page as bytes. Returns `None` when no pages remain. |
+| `getImageStreams(host, jobId, imageType='image/png')` | Drain the job and return all page streams. |
+| `getImageFile(host, jobId, directory, imageType='image/png', filename=None)` | Save the next page to disk. |
+| `getImageFiles(host, jobId, directory, imageType='image/png')` | Save every page from a job to disk. |
+| `getImageInfo(host, jobId)` | Get the next page metadata object returned by `next-page-info`. |
+| `getScannerCapabilities(host, jobId, caps=None)` | Query scanner capabilities for a pending job. |
+| `getScannerSettings(host, jobId, showUI=True)` | Retrieve TWAIN settings for a pending job. |
+| `getStreamFromUrl(url)` | Download a binary page stream from an absolute Dynamic Web TWAIN source URL. |
 
-- Wheel Distribution:
-    
-    ```bash
-    pip wheel . --verbose
-    # Or
-    python setup.py bdist_wheel
-    ```
+### Document storage APIs
 
+| Method | Description |
+| --- | --- |
+| `createDocument(host, parameters)` | Create a storage document, optionally password protected. |
+| `getDocumentInfo(host, docId, password='')` | Get document metadata. |
+| `deleteDocument(host, docId, password='')` | Delete a document. Returns `True` on success. |
+| `getDocumentStream(host, docId, parameters=None, documentPassword='')` | Download document content as bytes. Supports the query options documented in the REST reference. |
+| `getDocumentFile(host, docId, directory, parameters=None, documentPassword='', filename=None)` | Save document content to disk. |
+| `insertPage(host, docId, parameters)` | Insert a scanned page into a stored document. `password` is sent as `DWT-DOC-PASSWORD`. |
+| `deletePage(host, docId, pageId, password='')` | Delete a page from a stored document. |
 
+### Processing APIs
+
+| Method | Description |
+| --- | --- |
+| `readBarcode(host, parameters)` | Call `/process/read-barcode` on a scanned source URL. |
+| `checkBlank(host, parameters)` | Call `/process/check-blank` on a scanned source URL. |
+
+### Error handling
+
+If you want exceptions instead of fallback values, create the controller like this:
+
+```python
+from dynamsoftservice import ScannerController, ScannerServiceError
+
+controller = ScannerController(raise_errors=True)
+
+try:
+    info = controller.getServerInfo("http://127.0.0.1:18622")
+except ScannerServiceError as error:
+    print(error.status_code)
+    print(error.details)
+```
+
+## Examples
+
+- Flet desktop example: [example](example)
+- Secure FastAPI web gateway with user registration and scanner locking: [webexample](webexample)
+
+The `webexample` folder shows how to expose a shared TWAIN scanner to other machines on a trusted network while enforcing per-user registration, JWT-protected access, and scanner locking.
+
+## Build the package
+
+```bash
+python setup.py sdist
+python setup.py bdist_wheel
+```

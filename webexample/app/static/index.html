@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Secure Remote Scanning Gateway</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <div class="backdrop"></div>
+  <main class="shell">
+    <section class="hero panel">
+      <div class="hero-copy">
+        <p class="eyebrow">Shared TWAIN access over your LAN</p>
+        <h1>Secure Remote Scanning Gateway</h1>
+        <p class="lede">Keep registration and sign-in tucked away until someone asks for them, then reveal a scanner workspace only after authentication succeeds.</p>
+      </div>
+      <div class="hero-rail">
+        <div class="hero-status" id="sessionState">
+          <span class="status-dot"></span>
+          <span>Waiting for sign-in</span>
+        </div>
+        <div class="hero-action-row" id="heroActionRow">
+          <button data-open-auth="login" type="button">Sign In</button>
+          <button class="ghost-button" data-open-auth="register" type="button">Create Access</button>
+        </div>
+        <div class="hero-note" id="adminStatusCard">
+          <p class="eyebrow">Admin Access</p>
+          <p class="hero-note-text" id="adminSummary">Loading administrator account...</p>
+        </div>
+        <div class="hero-user-tools">
+          <div class="user-badge" id="userBadge" hidden></div>
+          <button id="logoutButton" class="ghost-button" type="button" hidden>Sign Out</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="notice-banner panel" id="messageBanner" data-tone="info" role="status" aria-live="polite">
+      Sign in to load scanner status and start scans.
+    </section>
+
+    <section class="auth-entry-grid" id="authEntrySection" hidden>
+      <article class="panel auth-workflow-card accent-panel" id="authPanel">
+        <div class="auth-panel-header">
+          <div>
+            <p class="eyebrow" id="authEyebrow">Secure Entry</p>
+            <h2 id="authTitle">Sign In</h2>
+            <p class="panel-copy" id="authCopy">Use an existing account to open the private scanning workspace.</p>
+          </div>
+          <button id="closeAuthPanel" class="ghost-button" type="button">Close</button>
+        </div>
+
+        <div class="auth-toggle-row" role="tablist" aria-label="Authentication mode">
+          <button class="mode-button is-active" data-switch-auth="login" type="button">Sign In</button>
+          <button class="mode-button" data-switch-auth="register" type="button">Create Access</button>
+        </div>
+
+        <form id="loginForm" class="stack-form">
+          <label>
+            <span>Username</span>
+            <input id="loginUsername" name="username" type="text" autocomplete="username" minlength="3" maxlength="50" required>
+          </label>
+          <label>
+            <span>Password</span>
+            <input id="loginPassword" name="password" type="password" autocomplete="current-password" minlength="8" maxlength="128" required>
+          </label>
+          <p class="form-hint">Use the administrator account shown above to open user management.</p>
+          <button type="submit">Get Access Token</button>
+        </form>
+
+        <form id="registerForm" class="stack-form" hidden>
+          <label>
+            <span>Username</span>
+            <input id="registerUsername" name="username" type="text" autocomplete="username" minlength="3" maxlength="50" required>
+          </label>
+          <label>
+            <span>Full Name</span>
+            <input id="registerFullName" name="full_name" type="text" autocomplete="name" maxlength="80" required>
+          </label>
+          <label>
+            <span>Password</span>
+            <input id="registerPassword" name="password" type="password" autocomplete="new-password" minlength="8" maxlength="128" required>
+          </label>
+          <p class="form-hint">Username must be at least 3 characters. Password must be at least 8 characters.</p>
+          <button type="submit">Register</button>
+        </form>
+      </article>
+    </section>
+
+    <section class="workspace-grid" id="workspaceSection" hidden>
+      <article class="panel operations-panel">
+        <div class="panel-header">
+          <div>
+            <p class="eyebrow">Authenticated Workspace</p>
+            <h2>Scanner Operations</h2>
+            <p class="panel-copy">Controls and status change based on your account role.</p>
+          </div>
+          <div class="workspace-role-pill" id="workspaceRolePill">Signed out</div>
+        </div>
+
+        <div class="operations-body">
+
+        <section class="operations-section control-section" id="scanControlsSection">
+          <div class="section-header">
+            <h3>Scan Controls</h3>
+          </div>
+          <div class="control-grid">
+            <label>
+              <span>Resolution</span>
+              <input id="resolutionInput" type="number" min="75" max="600" value="200">
+            </label>
+            <label>
+              <span>Pixel Type</span>
+              <select id="pixelTypeInput">
+                <option value="0">Black and White</option>
+                <option value="1">Grayscale</option>
+                <option value="2" selected>Color</option>
+              </select>
+            </label>
+            <label>
+              <span>Image Format</span>
+              <select id="imageTypeInput">
+                <option value="image/png" selected>PNG</option>
+                <option value="image/jpeg">JPEG</option>
+              </select>
+            </label>
+            <label class="toggle-row">
+              <input id="feederInput" type="checkbox" checked>
+              <span>Use feeder</span>
+            </label>
+            <label class="toggle-row">
+              <input id="duplexInput" type="checkbox">
+              <span>Duplex</span>
+            </label>
+            <label class="toggle-row">
+              <input id="showUiInput" type="checkbox">
+              <span>Show vendor UI on scanner host</span>
+            </label>
+          </div>
+        </section>
+
+        <section class="operations-section scanner-section" id="scannerStatusSection">
+          <div class="section-header">
+            <div>
+              <h3>Scanner Status</h3>
+              <p class="panel-copy">Choose one shared scanner from the dropdown. Switching the selection does not clear the captured image container.</p>
+            </div>
+            <div class="section-actions">
+              <span class="caption" id="serviceCaption">Service offline</span>
+              <button id="refreshButton" class="ghost-button" type="button">Refresh Scanners</button>
+            </div>
+          </div>
+          <label class="scanner-select-label">
+            <span>Available Scanners</span>
+            <select id="scannerSelect"></select>
+          </label>
+          <div class="scanner-detail" id="scannerDetail">
+            <div class="empty-state">No scanner data yet.</div>
+          </div>
+          <div class="scanner-action-row">
+            <button id="scanSelectedButton" type="button" disabled>Scan Selected Scanner</button>
+          </div>
+        </section>
+
+        <section class="operations-section users-section" id="usersPanel" hidden>
+          <div class="section-header">
+            <div>
+              <h3>User Management</h3>
+              <p class="panel-copy">Delete accounts or change a user&#39;s administrator permissions.</p>
+            </div>
+            <button id="refreshUsersButton" class="ghost-button" type="button">Refresh Users</button>
+          </div>
+          <div class="user-list" id="userList">
+            <div class="empty-state">Only administrators can manage accounts.</div>
+          </div>
+        </section>
+
+        </div><!-- /.operations-body -->
+      </article>
+
+      <article class="panel result-panel" id="resultPanel">
+        <div class="panel-header result-header">
+          <div>
+            <h2>Scan Output</h2>
+            <p class="panel-copy" id="resultMeta">No pages captured yet. Results remain in this container when you switch scanners.</p>
+          </div>
+          <span class="caption" id="pageIndicator">0 pages</span>
+        </div>
+        <div class="result-export-row">
+          <button id="exportPngButton" class="ghost-button" type="button" disabled>Export PNG</button>
+          <button id="exportPdfButton" type="button" disabled>Export PDF</button>
+        </div>
+        <div class="result-stage-shell">
+          <div class="result-stage-scroll" id="resultStage">
+            <div class="empty-state">Run a scan to preview captured pages here.</div>
+          </div>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <script src="/static/app.js" defer></script>
+
+  <!-- Lightbox overlay for full-size image preview -->
+  <div id="lightbox" class="lightbox" hidden role="dialog" aria-modal="true" aria-label="Full-size page preview">
+    <button id="lightboxClose" class="lightbox-close" type="button" aria-label="Close preview">&times;</button>
+    <img id="lightboxImage" class="lightbox-image" alt="Full-size scanned page">
+  </div>
+</body>
+</html>

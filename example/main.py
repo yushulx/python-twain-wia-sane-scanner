@@ -50,20 +50,24 @@ def main(page: ft.Page):
             "IfShowUI": False,
             "PixelType": 2,
             "Resolution": 200,
-            "IfFeederEnabled": False,
+            "IfFeederEnabled": True,
             "IfDuplexEnabled": False,
         }
 
         job = scannerController.createJob(host, parameters)
         job_id = job["jobuid"]
         if job_id != "":
-            images = scannerController.getImageStreams(host, job_id)
-            for i, image in enumerate(images):
+            while True:
+                image = scannerController.getImageStream(host, job_id)
+                if image is None:
+                    break
+
                 base64_encoded = base64.b64encode(image)
                 display = ft.Image(src_base64=base64_encoded.decode('utf-8'), width=600,
                                    height=600,
                                    fit=ft.ImageFit.CONTAIN,)
                 lv.controls.append(display)
+                page.update()
 
             scannerController.deleteJob(host, job_id)
 

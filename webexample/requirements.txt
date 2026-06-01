@@ -1,0 +1,5 @@
+fastapi==0.115.12
+uvicorn[standard]==0.30.6
+PyJWT==2.9.0
+python-multipart==0.0.9
+Pillow==10.4.0

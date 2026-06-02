@@ -211,8 +211,8 @@ except ScannerServiceError as error:
 
 ## Examples
 
-- Flet desktop example: [example](example)
-- Secure FastAPI web gateway with user registration and scanner locking: [webexample](webexample)
+- Flet desktop example: [example](https://github.com/yushulx/python-twain-wia-sane-scanner/tree/main/example)
+- Secure FastAPI web gateway with user registration and scanner locking: [webexample](https://github.com/yushulx/python-twain-wia-sane-scanner/tree/main/webexample)
 
 The `webexample` folder shows how to expose a shared TWAIN scanner to other machines on a trusted network while enforcing per-user registration, JWT-protected access, and scanner locking.
 

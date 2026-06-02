@@ -8,6 +8,8 @@ It adds three controls that are missing from a direct LAN-exposed scanner:
 - JWT-protected API calls for every scan request
 - scanner locking so only one user can acquire a device at a time while other users can still see status
 
+https://github.com/user-attachments/assets/aedfa5fa-ffa6-4ac9-9184-01f0ec5a4fd0
+
 ## Features
 
 - Hidden-by-default registration and sign-in flows on the public landing view

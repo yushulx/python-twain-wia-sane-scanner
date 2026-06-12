@@ -86,3 +86,6 @@ The app preloads the PP-DocLayoutV3 layout model during startup when the selecte
 - If `LAYOUT_MODEL_DIR` is set, the app loads directly from that local directory.
 - If `LAYOUT_LOCAL_ONLY=1` is set, the app will not try to fetch missing files from the network.
 - If neither local source exists, `transformers` may try to resolve the model online.
+
+## Blog
+[Build a Windows Desktop Document Scanner with OCR and Layout Analysis in Python](https://www.dynamsoft.com/codepool/build-windows-desktop-document-ocr-scanner.html)

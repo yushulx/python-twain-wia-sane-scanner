@@ -2,6 +2,8 @@
 
 This sample is a Windows desktop OCR application built with PySide6. It combines local document layout detection from PP-DocLayoutV3, multiple OCR backends, and document acquisition from Dynamic Web TWAIN Service.
 
+https://github.com/user-attachments/assets/2c9e03e8-94d6-403a-8faa-af5a5f5a7289
+
 ## Features
 
 - Open images from disk, paste from the clipboard, or drag and drop files into the app.
@@ -44,8 +46,6 @@ huggingface-cli download PaddlePaddle/PP-DocLayoutV3_safetensors --local-dir D:\
 $env:LAYOUT_MODEL_DIR="D:\models\PP-DocLayoutV3_safetensors"
 $env:LAYOUT_LOCAL_ONLY="1"
 ```
-
-`HF_ENDPOINT` is no longer forced by the app. If you still want to download from a mirror in China, set it yourself before launching the program.
 
 ## Run
 

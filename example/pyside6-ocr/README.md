@@ -2,6 +2,8 @@
 
 This sample is a Windows desktop OCR application built with PySide6. It combines local document layout detection from PP-DocLayoutV3, multiple OCR backends, and document acquisition from Dynamic Web TWAIN Service.
 
+https://github.com/user-attachments/assets/2c9e03e8-94d6-403a-8faa-af5a5f5a7289
+
 ## Features
 
 - Open images from disk, paste from the clipboard, or drag and drop files into the app.
@@ -45,8 +47,6 @@ $env:LAYOUT_MODEL_DIR="D:\models\PP-DocLayoutV3_safetensors"
 $env:LAYOUT_LOCAL_ONLY="1"
 ```
 
-`HF_ENDPOINT` is no longer forced by the app. If you still want to download from a mirror in China, set it yourself before launching the program.
-
 ## Run
 
 ```powershell
@@ -86,3 +86,6 @@ The app preloads the PP-DocLayoutV3 layout model during startup when the selecte
 - If `LAYOUT_MODEL_DIR` is set, the app loads directly from that local directory.
 - If `LAYOUT_LOCAL_ONLY=1` is set, the app will not try to fetch missing files from the network.
 - If neither local source exists, `transformers` may try to resolve the model online.
+
+## Blog
+[Build a Windows Desktop Document Scanner with OCR and Layout Analysis in Python](https://www.dynamsoft.com/codepool/build-windows-desktop-document-ocr-scanner.html)

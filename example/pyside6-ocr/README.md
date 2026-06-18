@@ -6,7 +6,7 @@ This sample is a Windows desktop OCR application built with PySide6. It combines
 
 - Open images from disk, paste from the clipboard, or drag and drop files into the app.
 - Detect document layout first and draw overlay regions before full-page OCR finishes.
-- Run full-page OCR with one of three backends from the toolbar: `glm-ocr:latest` through Ollama, Windows `oneocr`, or `PaddleOCR`.
+- Run full-page OCR with one of three backends from the toolbar: `glm-ocr:latest` through Ollama, Windows `oneocr`, or `PaddleOCR` (PP-OCRv6).
 - Run PP-DocLayoutV3 layout analysis separately from OCR with the `Layout Analysis` button.
 - Click any detected region to trigger lazy OCR for that block only.
 - Enumerate TWAIN and WIA scanners through `twain-wia-sane-scanner` and import scanned pages directly into the OCR workflow.

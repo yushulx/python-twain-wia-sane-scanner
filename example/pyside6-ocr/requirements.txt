@@ -5,4 +5,4 @@ transformers>=4.0
 numpy>=1.20
 twain-wia-sane-scanner>=2.0.3
 oneocr>=1.0.12; platform_system == "Windows"
-paddleocr>=3.6.0
+paddleocr>=3.7.0

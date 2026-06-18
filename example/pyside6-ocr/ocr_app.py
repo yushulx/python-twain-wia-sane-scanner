@@ -113,8 +113,8 @@ PADDLEOCR_DEVICE = os.environ.get(
     "PADDLEOCR_DEVICE",
     "gpu" if torch.cuda.is_available() else "cpu",
 )
-PADDLEOCR_DET_MODEL = os.environ.get("PADDLEOCR_DET_MODEL", "PP-OCRv5_mobile_det")
-PADDLEOCR_REC_MODEL = os.environ.get("PADDLEOCR_REC_MODEL", "PP-OCRv5_mobile_rec")
+PADDLEOCR_DET_MODEL = os.environ.get("PADDLEOCR_DET_MODEL", "PP-OCRv6_small_det")
+PADDLEOCR_REC_MODEL = os.environ.get("PADDLEOCR_REC_MODEL", "PP-OCRv6_small_rec")
 ONEOCR_RUNTIME_DIR = Path.home() / ".config" / "oneocr"
 ONEOCR_RUNTIME_FILES = ("oneocr.dll", "oneocr.onemodel", "onnxruntime.dll")
 
@@ -1741,8 +1741,19 @@ class OcrApp(QMainWindow):
     def _has_running_worker(self) -> bool:
         return any(
             worker is not None and worker.isRunning()
-            for worker in (self.worker, self.layout_worker, self.region_worker, self.scan_worker, self.preload_worker)
+            for worker in (self.worker, self.layout_worker, self.region_worker, self.scan_worker)
         )
+
+    def _stop_worker(self, worker: Optional[QThread], timeout_ms: int = 2000) -> bool:
+        """Stop a worker thread gracefully; terminate if it does not exit in time."""
+        if worker is None or not worker.isRunning():
+            return True
+        worker.requestInterruption()
+        worker.quit()
+        if worker.wait(timeout_ms):
+            return True
+        worker.terminate()
+        return worker.wait(500)
 
     def _start_model_preload(self):
         if self.preload_worker is not None:
@@ -1766,17 +1777,35 @@ class OcrApp(QMainWindow):
         self.preload_worker = None
 
     def closeEvent(self, event):
-        """Avoid destroying worker threads while an OCR or scan request is still active."""
-        if self._has_running_worker():
+        """Stop background preload and allow force-quitting user-facing tasks."""
+        if self.preload_worker is not None:
+            self._stop_worker(self.preload_worker, timeout_ms=1000)
+            self.preload_worker = None
+
+        if not self._has_running_worker():
+            event.accept()
+            return
+
+        reply = QMessageBox.question(
+            self,
+            "Task In Progress",
+            "An OCR or scanning task is still running. Do you want to force quit and close the window?",
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.No,
+        )
+        if reply == QMessageBox.No:
             self._update_status("Wait for the active OCR/scan task to finish before closing the app.")
-            QMessageBox.information(
-                self,
-                "Task In Progress",
-                "An OCR or scanning task is still running. Please wait for it to finish, or let it time out, before closing the window.",
-            )
             event.ignore()
             return
-        super().closeEvent(event)
+
+        self._update_status("Force quitting running tasks...")
+        for worker in (self.worker, self.layout_worker, self.region_worker, self.scan_worker):
+            self._stop_worker(worker, timeout_ms=2000)
+        self.worker = None
+        self.layout_worker = None
+        self.region_worker = None
+        self.scan_worker = None
+        event.accept()
 
     # -- drag & drop --
     def dragEnterEvent(self, event: QDragEnterEvent):
